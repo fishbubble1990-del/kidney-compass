@@ -1,7 +1,7 @@
 
 import { ActivityClassification, DailyRecord, HealthAnalysis, Recipe, ReportAnalysis } from "../types";
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "http://localhost:8001";
 
 export const classifyItem = async (query: string, type: 'activity' | 'food' | 'medicine'): Promise<ActivityClassification> => {
   try {
