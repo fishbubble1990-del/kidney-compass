@@ -1,6 +1,6 @@
 
-import React, { useState, useRef } from 'react';
-import { Utensils, GlassWater, Search, Loader2, Info, Skull, ChefHat, RefreshCw, Leaf } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Utensils, GlassWater, Search, Loader2, Info, Skull, ChefHat, RefreshCw, Leaf, ShieldCheck, AlertTriangle, BookOpen, CheckCircle, XCircle } from 'lucide-react';
 import { classifyItem, getKidneyFriendlyRecipe } from '../services/geminiService';
 import { DailyRecord, ActivityClassification, Recipe } from '../types';
 
@@ -18,11 +18,53 @@ const DietWaterManager: React.FC<DietWaterManagerProps> = ({ record, setRecord }
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isRecipeLoading, setIsRecipeLoading] = useState(false);
 
+  // Tab State
+  const [activeTab, setActiveTab] = useState<'whitelist' | 'blacklist' | 'recipe'>('whitelist');
+
+  // Whitelist State
+  const [whitelist, setWhitelist] = useState<Array<{category: string; name: string; note: string}>>([]);
+  const [whitelistLoading, setWhitelistLoading] = useState(false);
+
+  // Blacklist State
+  const [blacklist, setBlacklist] = useState<Array<{name: string; reason: string; level: string}>>([]);
+  const [blacklistLoading, setBlacklistLoading] = useState(false);
+
   // Water Progress Bar State
   const progressBarRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const goal = 2000;
   const maxBarValue = 3000; // Max visual range for the slider
+
+  // Fetch whitelist data on component mount
+  useEffect(() => {
+    fetchWhitelist();
+  }, []);
+
+  const fetchWhitelist = async () => {
+    setWhitelistLoading(true);
+    try {
+      const response = await fetch('http://localhost:8001/api/food-whitelist');
+      const data = await response.json();
+      setWhitelist(data.whitelist || []);
+    } catch (error) {
+      console.error('Failed to fetch whitelist:', error);
+    } finally {
+      setWhitelistLoading(false);
+    }
+  };
+
+  const fetchBlacklist = async () => {
+    setBlacklistLoading(true);
+    try {
+      const response = await fetch('http://localhost:8001/api/food-blacklist');
+      const data = await response.json();
+      setBlacklist(data.blacklist || []);
+    } catch (error) {
+      console.error('Failed to fetch blacklist:', error);
+    } finally {
+      setBlacklistLoading(false);
+    }
+  };
 
   const addWater = (amount: number) => {
     setRecord({ ...record, waterIntake: record.waterIntake + amount });
@@ -75,6 +117,13 @@ const DietWaterManager: React.FC<DietWaterManagerProps> = ({ record, setRecord }
     setIsRecipeLoading(false);
   };
 
+  const handleTabChange = (tab: 'whitelist' | 'blacklist' | 'recipe') => {
+    setActiveTab(tab);
+    if (tab === 'blacklist' && blacklist.length === 0) {
+      fetchBlacklist();
+    }
+  };
+
   return (
     <div className="space-y-6 pb-24">
       <header className="flex items-center space-x-3">
@@ -86,6 +135,217 @@ const DietWaterManager: React.FC<DietWaterManagerProps> = ({ record, setRecord }
           <p className="text-xs text-slate-500">分时段补水，精细化控盐控嘌呤。</p>
         </div>
       </header>
+
+      {/* Tab Navigation */}
+      <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-100">
+        <div className="flex space-x-1">
+          <button
+            onClick={() => handleTabChange('whitelist')}
+            className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl font-bold transition-all ${
+              activeTab === 'whitelist' 
+                ? 'bg-teal-500 text-white shadow-md' 
+                : 'text-slate-500 hover:bg-slate-50'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span className="text-sm">白名单</span>
+          </button>
+          <button
+            onClick={() => handleTabChange('blacklist')}
+            className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl font-bold transition-all ${
+              activeTab === 'blacklist' 
+                ? 'bg-red-500 text-white shadow-md' 
+                : 'text-slate-500 hover:bg-slate-50'
+            }`}
+          >
+            <AlertTriangle className="w-4 h-4" />
+            <span className="text-sm">黑名单</span>
+          </button>
+          <button
+            onClick={() => handleTabChange('recipe')}
+            className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl font-bold transition-all ${
+              activeTab === 'recipe' 
+                ? 'bg-amber-500 text-white shadow-md' 
+                : 'text-slate-500 hover:bg-slate-50'
+            }`}
+          >
+            <BookOpen className="w-4 h-4" />
+            <span className="text-sm">菜谱</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Whitelist Tab Content */}
+      {activeTab === 'whitelist' && (
+        <div className="space-y-4">
+          <section className="bg-gradient-to-br from-teal-50 to-emerald-50 p-6 rounded-3xl border border-teal-100">
+            <div className="flex items-center space-x-2 mb-4">
+              <CheckCircle className="w-5 h-5 text-teal-600" />
+              <h3 className="text-lg font-bold text-teal-800">护肾食物白名单</h3>
+            </div>
+            <p className="text-xs text-teal-700 mb-4">以下食物经过专业筛选，适合肾病患者食用</p>
+            
+            {whitelistLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {whitelist.map((item, index) => (
+                  <div key={index} className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-teal-100 shadow-sm">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <span className="text-[10px] font-bold bg-teal-100 text-teal-700 px-2 py-0.5 rounded-md">
+                          {item.category}
+                        </span>
+                        <h4 className="text-sm font-bold text-slate-800 mt-1">{item.name}</h4>
+                      </div>
+                      <CheckCircle className="w-5 h-5 text-teal-500 flex-shrink-0" />
+                    </div>
+                    <p className="text-xs text-slate-600 bg-teal-50 p-2 rounded-lg">
+                      {item.note}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+
+      {/* Blacklist Tab Content */}
+      {activeTab === 'blacklist' && (
+        <div className="space-y-4">
+          <section className="bg-gradient-to-br from-red-50 to-orange-50 p-6 rounded-3xl border border-red-100">
+            <div className="flex items-center space-x-2 mb-4">
+              <XCircle className="w-5 h-5 text-red-600" />
+              <h3 className="text-lg font-bold text-red-800">慎用食物黑名单</h3>
+            </div>
+            <p className="text-xs text-red-700 mb-4">以下食物可能对肾脏造成负担，建议避免或限制食用</p>
+            
+            {blacklistLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-red-500" />
+              </div>
+            ) : blacklist.length > 0 ? (
+              <div className="space-y-3">
+                {blacklist.map((item, index) => (
+                  <div key={index} className={`bg-white/80 backdrop-blur-sm rounded-xl p-4 border shadow-sm ${
+                    item.level === 'red' ? 'border-red-200' : 'border-amber-200'
+                  }`}>
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="text-sm font-bold text-slate-800">{item.name}</h4>
+                      {item.level === 'red' ? (
+                        <Skull className="w-5 h-5 text-red-500 flex-shrink-0" />
+                      ) : (
+                        <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-600 bg-red-50 p-2 rounded-lg">
+                      {item.reason}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-red-600/60">
+                <p className="text-sm">暂无黑名单数据</p>
+                <p className="text-xs mt-1">可通过搜索功能查询特定食物</p>
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+
+      {/* Recipe Tab Content */}
+      {activeTab === 'recipe' && (
+        <div className="space-y-4">
+          <section className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-3xl border border-amber-100 relative overflow-hidden">
+            <div className="flex justify-between items-center mb-4 relative z-10">
+              <div className="flex items-center space-x-2">
+                <ChefHat className="w-5 h-5 text-amber-600" />
+                <h3 className="text-lg font-bold text-amber-800">护肾菜谱推荐</h3>
+              </div>
+              <button 
+                onClick={generateRecipe}
+                disabled={isRecipeLoading}
+                className="flex items-center justify-center w-24 h-8 bg-white text-amber-700 rounded-full font-bold shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
+              >
+                {isRecipeLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-amber-500 origin-center" />
+                ) : (
+                  <div className="flex items-center space-x-1 text-xs">
+                    <RefreshCw className="w-3 h-3" />
+                    <span>{recipe ? '换一个' : '生成食谱'}</span>
+                  </div>
+                )}
+              </button>
+            </div>
+
+            <Leaf className="absolute -right-4 -bottom-4 w-24 h-24 text-amber-200 opacity-30 rotate-12" />
+
+            {!recipe && !isRecipeLoading && (
+              <div className="text-center py-6 text-amber-600/60 text-sm">
+                <p>不知道吃什么？</p>
+                <p className="text-xs mt-1">点击右上角，生成低盐低脂优质蛋白食谱</p>
+              </div>
+            )}
+
+            {isRecipeLoading && (
+              <div className="py-8 flex flex-col items-center justify-center space-y-3">
+                <div className="w-10 h-10 flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 text-amber-500 animate-spin origin-center" />
+                </div>
+                <p className="text-xs text-amber-600 animate-pulse">正在为您调配营养食材...</p>
+              </div>
+            )}
+
+            {recipe && !isRecipeLoading && (
+              <div className="relative z-10 bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-white animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="text-lg font-black text-slate-800">{recipe.dishName}</h4>
+                </div>
+                
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {recipe.tags.map((tag, i) => (
+                    <span key={i} className="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">食材准备</p>
+                    <div className="flex flex-wrap gap-2">
+                      {recipe.ingredients.map((ing, i) => (
+                        <span key={i} className="text-xs text-slate-700 bg-slate-100 px-2 py-1 rounded-lg">{ing}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">烹饪步骤</p>
+                    <ol className="list-decimal list-inside space-y-1">
+                      {recipe.steps.map((step, i) => (
+                        <li key={i} className="text-xs text-slate-600 leading-relaxed pl-1 marker:text-amber-500 marker:font-bold">
+                          {step}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+
+                  <div className="bg-amber-50 p-2 rounded-lg border border-amber-100 mt-2">
+                    <p className="text-[10px] text-amber-800 leading-tight">
+                      <span className="font-bold">✨ 推荐理由：</span>{recipe.nutritionBenefit}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      )}
 
       {/* Water Tracker */}
       <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
@@ -157,91 +417,6 @@ const DietWaterManager: React.FC<DietWaterManagerProps> = ({ record, setRecord }
           <div className="mt-4 p-3 bg-amber-50 text-amber-700 rounded-xl flex items-start space-x-2 border border-amber-100">
             <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <p className="text-xs font-medium">当前补水不足，可能增加尿酸沉积风险，请及时补充。</p>
-          </div>
-        )}
-      </section>
-
-      {/* Recipe Generator Section */}
-      <section className="bg-gradient-to-br from-teal-50 to-emerald-50 p-6 rounded-3xl border border-teal-100 relative overflow-hidden">
-        <div className="flex justify-between items-center mb-4 relative z-10">
-          <h3 className="text-lg font-bold text-teal-800 flex items-center">
-            <ChefHat className="w-5 h-5 mr-2" /> 今日护肾灵感
-          </h3>
-          <button 
-            onClick={generateRecipe}
-            disabled={isRecipeLoading}
-            className="flex items-center justify-center w-24 h-8 bg-white text-teal-700 rounded-full font-bold shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
-          >
-            {isRecipeLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin text-teal-500 origin-center" />
-            ) : (
-              <div className="flex items-center space-x-1 text-xs">
-                <RefreshCw className="w-3 h-3" />
-                <span>{recipe ? '换一个' : '生成食谱'}</span>
-              </div>
-            )}
-          </button>
-        </div>
-
-        <Leaf className="absolute -right-4 -bottom-4 w-24 h-24 text-teal-200 opacity-30 rotate-12" />
-
-        {!recipe && !isRecipeLoading && (
-          <div className="text-center py-6 text-teal-600/60 text-sm">
-            <p>不知道吃什么？</p>
-            <p className="text-xs mt-1">点击右上角，生成低盐低脂优质蛋白食谱</p>
-          </div>
-        )}
-
-        {isRecipeLoading && (
-          <div className="py-8 flex flex-col items-center justify-center space-y-3">
-            <div className="w-10 h-10 flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-teal-500 animate-spin origin-center" />
-            </div>
-            <p className="text-xs text-teal-600 animate-pulse">正在为您调配营养食材...</p>
-          </div>
-        )}
-
-        {recipe && !isRecipeLoading && (
-          <div className="relative z-10 bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-white animate-in fade-in slide-in-from-bottom-2">
-            <div className="flex justify-between items-start mb-2">
-              <h4 className="text-lg font-black text-slate-800">{recipe.dishName}</h4>
-            </div>
-            
-            <div className="flex flex-wrap gap-1 mb-3">
-              {recipe.tags.map((tag, i) => (
-                <span key={i} className="text-[10px] font-bold bg-teal-100 text-teal-700 px-2 py-0.5 rounded-md">
-                  {tag}
-                </span>
-              ))}
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">食材准备</p>
-                <div className="flex flex-wrap gap-2">
-                  {recipe.ingredients.map((ing, i) => (
-                    <span key={i} className="text-xs text-slate-700 bg-slate-100 px-2 py-1 rounded-lg">{ing}</span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">烹饪步骤</p>
-                <ol className="list-decimal list-inside space-y-1">
-                  {recipe.steps.map((step, i) => (
-                    <li key={i} className="text-xs text-slate-600 leading-relaxed pl-1 marker:text-teal-500 marker:font-bold">
-                      {step}
-                    </li>
-                  ))}
-                </ol>
-              </div>
-
-              <div className="bg-teal-50 p-2 rounded-lg border border-teal-100 mt-2">
-                <p className="text-[10px] text-teal-800 leading-tight">
-                  <span className="font-bold">✨ 推荐理由：</span>{recipe.nutritionBenefit}
-                </p>
-              </div>
-            </div>
           </div>
         )}
       </section>
