@@ -1,0 +1,11 @@
+[build]
+builder = "NIXPACKS_BUILDER"
+
+[phases.build]
+cmds = ["npm run build"]
+
+[phases.start]
+cmds = ["npm run preview --host 0.0.0.0 --port $PORT"]
+
+[variables]
+PORT = "3000"
