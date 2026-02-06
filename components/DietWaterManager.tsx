@@ -104,6 +104,42 @@ const DietWaterManager: React.FC<DietWaterManagerProps> = ({ record, setRecord }
   const handleFoodSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!foodQuery.trim()) return;
+    
+    // 首先在本地黑白名单中搜索
+    const query = foodQuery.toLowerCase().trim();
+    
+    // 搜索白名单
+    const whitelistMatch = whitelist.find(item => 
+      item.name.toLowerCase().includes(query) || 
+      item.category.toLowerCase().includes(query)
+    );
+    
+    if (whitelistMatch) {
+      setFoodResult({
+        name: whitelistMatch.name,
+        level: 'green',
+        reason: `该食物在护肾白名单中，属于${whitelistMatch.category}`,
+        advice: whitelistMatch.note
+      });
+      return;
+    }
+    
+    // 搜索黑名单
+    const blacklistMatch = blacklist.find(item => 
+      item.name.toLowerCase().includes(query)
+    );
+    
+    if (blacklistMatch) {
+      setFoodResult({
+        name: blacklistMatch.name,
+        level: blacklistMatch.level,
+        reason: blacklistMatch.reason,
+        advice: blacklistMatch.level === 'red' ? '建议避免食用' : '建议限量食用'
+      });
+      return;
+    }
+    
+    // 如果黑白名单中没有匹配项，则调用 Gemini API
     setIsLoading(true);
     const res = await classifyItem(foodQuery, 'food');
     setFoodResult(res);
