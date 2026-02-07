@@ -1,5 +1,4 @@
 [build]
-builder = "NIXPACKS_BUILDER"
 
 [phases.build]
 cmds = ["pip install -r requirements.txt"]
