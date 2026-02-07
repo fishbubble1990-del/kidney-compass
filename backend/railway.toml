@@ -1,3 +1,4 @@
+# Railway configuration for backend
 [build]
 
 [phases.build]
