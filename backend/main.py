@@ -728,29 +728,29 @@ async def get_fallback_recipes():
 async def get_food_whitelist():
     try:
         # 尝试从数据库获取食物白名单
-        result = supabase.table('food_whitelist').select('*').execute()
-        if result.data:
-            return {"whitelist": result.data}
-        else:
-            # 如果数据库中没有数据，返回预设的食物白名单
-            return {
-                "whitelist": [
-                    {"category": "肉类", "name": "鸡胸肉", "note": "优质蛋白，必须去皮切片焯水"},
-                    {"category": "肉类", "name": "瘦猪肉", "note": "含铁丰富，必须切片焯水"},
-                    {"category": "肉类", "name": "鸭肉", "note": "利水消肿，必须去皮焯水"},
-                    {"category": "水产", "name": "黑鱼", "note": "促进伤口愈合，只吃肉不喝汤"},
-                    {"category": "水产", "name": "鲈鱼/草鱼", "note": "易消化，清蒸最佳"},
-                    {"category": "蛋奶", "name": "鸡蛋清", "note": "目前最推荐的蛋白来源，无限量"},
-                    {"category": "蛋奶", "name": "低脂牛奶", "note": "每日限200ml，补钙"},
-                    {"category": "增重主食", "name": "红薯粉条/粉丝", "note": "极低磷、无蛋白、高热量，长肉神器"},
-                    {"category": "增重主食", "name": "麦淀粉(澄粉)", "note": "可做水晶饺，补充热量"},
-                    {"category": "蔬菜", "name": "冬瓜/丝瓜", "note": "低钾低磷，利尿"},
-                    {"category": "蔬菜", "name": "大白菜/包菜", "note": "安全蔬菜，需炒熟"},
-                    {"category": "蔬菜", "name": "西葫芦/黄瓜", "note": "低嘌呤，推荐"},
-                    {"category": "水果", "name": "苹果/梨", "note": "低钾安全果，每日一个"},
-                    {"category": "油脂", "name": "菜籽油/橄榄油", "note": "每日35-40g，护肝且补充能量"}
-                ]
-            }
+        if supabase:
+            result = supabase.table('food_whitelist').select('*').execute()
+            if result.data:
+                return {"whitelist": result.data}
+        # 如果数据库中没有数据或Supabase未初始化，返回预设的食物白名单
+        return {
+            "whitelist": [
+                {"category": "肉类", "name": "鸡胸肉", "note": "优质蛋白，必须去皮切片焯水"},
+                {"category": "肉类", "name": "瘦猪肉", "note": "含铁丰富，必须切片焯水"},
+                {"category": "肉类", "name": "鸭肉", "note": "利水消肿，必须去皮焯水"},
+                {"category": "水产", "name": "黑鱼", "note": "促进伤口愈合，只吃肉不喝汤"},
+                {"category": "水产", "name": "鲈鱼/草鱼", "note": "易消化，清蒸最佳"},
+                {"category": "蛋奶", "name": "鸡蛋清", "note": "目前最推荐的蛋白来源，无限量"},
+                {"category": "蛋奶", "name": "低脂牛奶", "note": "每日限200ml，补钙"},
+                {"category": "增重主食", "name": "红薯粉条/粉丝", "note": "极低磷、无蛋白、高热量，长肉神器"},
+                {"category": "增重主食", "name": "麦淀粉(澄粉)", "note": "可做水晶饺，补充热量"},
+                {"category": "蔬菜", "name": "冬瓜/丝瓜", "note": "低钾低磷，利尿"},
+                {"category": "蔬菜", "name": "大白菜/包菜", "note": "安全蔬菜，需炒熟"},
+                {"category": "蔬菜", "name": "西葫芦/黄瓜", "note": "低嘌呤，推荐"},
+                {"category": "水果", "name": "苹果/梨", "note": "低钾安全果，每日一个"},
+                {"category": "油脂", "name": "菜籽油/橄榄油", "note": "每日35-40g，护肝且补充能量"}
+            ]
+        }
     except Exception as e:
         print(f"获取食物白名单失败: {e}")
         # 如果数据库连接失败，返回预设的食物白名单
@@ -777,27 +777,27 @@ async def get_food_whitelist():
 async def get_food_blacklist():
     try:
         # 尝试从数据库获取食物黑名单
-        result = supabase.table('food_blacklist').select('*').execute()
-        if result.data:
-            return {"blacklist": result.data}
-        else:
-            # 如果数据库中没有数据，返回预设的食物黑名单
-            return {
-                "blacklist": [
-                    {"name": "火锅", "reason": "高盐高嘌呤，加重肾脏负担", "level": "red"},
-                    {"name": "豆腐", "reason": "高磷高蛋白，不适合肾病患者", "level": "red"},
-                    {"name": "动物内脏", "reason": "高嘌呤高胆固醇，增加痛风风险", "level": "red"},
-                    {"name": "海鲜", "reason": "高嘌呤，可能引发痛风", "level": "red"},
-                    {"name": "浓汤", "reason": "高磷高嘌呤，加重肾脏负担", "level": "red"},
-                    {"name": "腌制食品", "reason": "高盐，加重肾脏负担", "level": "red"},
-                    {"name": "碳酸饮料", "reason": "高磷，影响钙磷代谢", "level": "yellow"},
-                    {"name": "坚果", "reason": "高磷高钾，需限量食用", "level": "yellow"},
-                    {"name": "香蕉", "reason": "高钾，肾病患者需限制", "level": "yellow"},
-                    {"name": "橙子", "reason": "高钾，肾病患者需限制", "level": "yellow"},
-                    {"name": "菠菜", "reason": "高钾高草酸，影响钙吸收", "level": "yellow"},
-                    {"name": "蘑菇", "reason": "高嘌呤，可能引发痛风", "level": "yellow"}
-                ]
-            }
+        if supabase:
+            result = supabase.table('food_blacklist').select('*').execute()
+            if result.data:
+                return {"blacklist": result.data}
+        # 如果数据库中没有数据或Supabase未初始化，返回预设的食物黑名单
+        return {
+            "blacklist": [
+                {"name": "火锅", "reason": "高盐高嘌呤，加重肾脏负担", "level": "red"},
+                {"name": "豆腐", "reason": "高磷高蛋白，不适合肾病患者", "level": "red"},
+                {"name": "动物内脏", "reason": "高嘌呤高胆固醇，增加痛风风险", "level": "red"},
+                {"name": "海鲜", "reason": "高嘌呤，可能引发痛风", "level": "red"},
+                {"name": "浓汤", "reason": "高磷高嘌呤，加重肾脏负担", "level": "red"},
+                {"name": "腌制食品", "reason": "高盐，加重肾脏负担", "level": "red"},
+                {"name": "碳酸饮料", "reason": "高磷，影响钙磷代谢", "level": "yellow"},
+                {"name": "坚果", "reason": "高磷高钾，需限量食用", "level": "yellow"},
+                {"name": "香蕉", "reason": "高钾，肾病患者需限制", "level": "yellow"},
+                {"name": "橙子", "reason": "高钾，肾病患者需限制", "level": "yellow"},
+                {"name": "菠菜", "reason": "高钾高草酸，影响钙吸收", "level": "yellow"},
+                {"name": "蘑菇", "reason": "高嘌呤，可能引发痛风", "level": "yellow"}
+            ]
+        }
     except Exception as e:
         print(f"获取食物黑名单失败: {e}")
         # 如果数据库连接失败，返回预设的食物黑名单
