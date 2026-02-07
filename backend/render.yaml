@@ -1,0 +1,16 @@
+# Render 部署配置
+services:
+  - type: web
+    name: kidney-compass-backend
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SUPABASE_URL
+        value: https://fdpglrvsxuztgwvhlamd.supabase.co
+      - key: SUPABASE_KEY
+        value: sb_publishable_zvTXR4EL2ChwRSKjKGyn1A_BFZdD-mw
+      - key: GEMINI_API_KEY
+        value: gen-lang-client-0962011102
+    region: oregon
