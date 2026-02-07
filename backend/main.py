@@ -1,3 +1,5 @@
+# Backend service for Kidney Compass
+# Updated: 2026-02-07
 import os
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
