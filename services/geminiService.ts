@@ -1,7 +1,7 @@
 
 import { ActivityClassification, DailyRecord, HealthAnalysis, Recipe, ReportAnalysis } from "../types";
 
-const API_BASE_URL = "http://localhost:8001";
+const API_BASE_URL = "https://huggingface.co/spaces/fishbubble1234/kidney-compass-backend";
 
 export const classifyItem = async (query: string, type: 'activity' | 'food' | 'medicine'): Promise<ActivityClassification> => {
   try {
