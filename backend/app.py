@@ -2,7 +2,6 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from uvicorn import run
 
 # 导入主应用
@@ -31,7 +30,8 @@ async def health_check():
     return {"status": "ok", "message": "Kidney Compass Backend is running!"}
 
 # 挂载主应用的所有路由
-app.include_router(main_app.router, prefix="")
+for route in main_app.routes:
+    app.routes.append(route)
 
 if __name__ == "__main__":
     # Hugging Face Spaces 使用 7860 端口
