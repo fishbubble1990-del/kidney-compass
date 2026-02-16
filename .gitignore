@@ -27,3 +27,6 @@ backend/.env
 *.njsproj
 *.sln
 *.sw?
+
+# Ignore Hugging Face Space clone
+kidney-compass-backend/
