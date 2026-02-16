@@ -38,7 +38,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const endpoint = isSignUp ? '/auth/signup' : '/auth/login';
 
     try {
-      const response = await fetch(`http://localhost:8001${endpoint}`, {
+      const response = await fetch(`https://fishbubble1234-kidney-compass-backend.hf.space${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
